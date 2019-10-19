@@ -108,7 +108,7 @@ const regex = {
 const maxAttrNameLen = 255;
 
 
-function getUpdateExpression({original, modified, orphans = false, supportSets = false, aliasContext = {truncatedAliasCounter: 1}}) {
+function getUpdateExpression({original, modified, ignoreDeletes = false, orphans = false, supportSets = false, aliasContext = {truncatedAliasCounter: 1}}) {
     const {SET, REMOVE, DELETE} = partitionedDiff(original, modified, orphans, supportSets);
 
     const updateExpression = {
@@ -143,7 +143,7 @@ function getUpdateExpression({original, modified, orphans = false, supportSets =
 
     const setExp = setExpression(SET);
     const removeExp = removeExpression(REMOVE);
-    const deleteExp = deleteExpression(DELETE);
+    const deleteExp = ignoreDeletes ? '' : deleteExpression(DELETE);
 
     updateExpression.UpdateExpression = [
         setExp,
