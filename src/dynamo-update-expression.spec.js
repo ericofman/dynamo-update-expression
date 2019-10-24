@@ -186,7 +186,8 @@ describe('dynamodb-update-expression', () => {
                     frontView: 'http://example.com/products/123_front.jpg',
                     rearView: 'http://example.com/products/123_rear.jpg',
                     sideView: 'http://example.com/products/123_right_side.jpg', // UPDATED Map item
-                    'left-view': 'http://example.com/products/123_left_side.jpg' // UPDATED Map item with dash
+                    'left-view': 'http://example.com/products/123_left_side.jpg', // UPDATED Map item with dash
+                    'left-&-right-view': 'http://example.com/products/123_left_side.jpg' // UPDATED Map item with dash
                 },
                 productReview: {
                     fiveStar: [
@@ -203,13 +204,14 @@ describe('dynamodb-update-expression', () => {
             };
             const updateExpression = due.getUpdateExpression({original, modified});
             expect(updateExpression).toEqual({
-                "UpdateExpression": "SET #color[2] = :color2, #pictures.#leftView = :picturesLeftView, #productReview.#fiveStar[2] = :productReviewFiveStar2, #inStok = :inStok, #pictures.#sideView = :picturesSideView, #price = :price, #productReview.#oneStar[0] = :productReviewOneStar0, #relatedItems[0] = :relatedItems0, #safetyWarning = :safetyWarning REMOVE #color[1], #productReview.#fiveStar[0], #relatedItems[1], #title",
+                "UpdateExpression": "SET #color[2] = :color2, #pictures.#leftRightView = :picturesLeftRightView, #pictures.#leftView = :picturesLeftView, #productReview.#fiveStar[2] = :productReviewFiveStar2, #inStok = :inStok, #pictures.#sideView = :picturesSideView, #price = :price, #productReview.#oneStar[0] = :productReviewOneStar0, #relatedItems[0] = :relatedItems0, #safetyWarning = :safetyWarning REMOVE #color[1], #productReview.#fiveStar[0], #relatedItems[1], #title",
 
                 "ExpressionAttributeNames": {
                     "#color": "color",
                     "#fiveStar": "fiveStar",
                     "#inStok": "inStok",
                     "#leftView": "left-view",
+                    "#leftRightView": "left-&-right-view",
                     "#oneStar": "oneStar",
                     "#pictures": "pictures",
                     "#price": "price",
@@ -224,6 +226,7 @@ describe('dynamodb-update-expression', () => {
                     ":inStok": false,
                     ":picturesLeftView": "http://example.com/products/123_left_side.jpg",
                     ":picturesSideView": "http://example.com/products/123_right_side.jpg",
+                    ":picturesLeftRightView": "http://example.com/products/123_left_side.jpg",
                     ":price": 600,
                     ":productReviewFiveStar2": "This is new",
                     ":productReviewOneStar0": "Actually I take it back, it is alright",
