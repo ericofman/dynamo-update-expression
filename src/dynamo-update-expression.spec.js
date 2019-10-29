@@ -129,7 +129,7 @@ describe('dynamodb-update-expression', () => {
 
             const {ADD} = due.diff(original, modified, true);
             expect(ADD.reduce((acc, node) => {
-                acc[node.path] = node.value;
+                acc[node.stringPath] = node.value;
                 return acc;
             }, {})).toEqual(ADDITIONS);
         });
@@ -139,7 +139,7 @@ describe('dynamodb-update-expression', () => {
 
             const {ADD} = due.diff(original, modified, false);
             expect(ADD.reduce((acc, node) => {
-                acc[node.path] = node.value;
+                acc[node.stringPath] = node.value;
                 return acc;
             }, {})).toEqual(ADDITIONS_NO_ORPHANS);
         });
@@ -149,7 +149,7 @@ describe('dynamodb-update-expression', () => {
 
             const {SET} = due.diff(original, modified);
             expect(SET.reduce((acc, node) => {
-                acc[node.path] = node.value;
+                acc[node.stringPath] = node.value;
                 return acc;
             }, {})).toEqual(UPDATES);
         });
@@ -159,7 +159,7 @@ describe('dynamodb-update-expression', () => {
 
             const {DELETE, SET, ADD} = due.diff(original, modified);
             expect(DELETE.reduce((acc, node) => {
-                acc.push(node.path);
+                acc.push(node.stringPath);
                 return acc;
             }, []).sort()).toEqual(DELETES.sort());
             expect(ADD).toEqual([]);
@@ -482,7 +482,7 @@ describe('dynamodb-update-expression', () => {
                         "Value for attribute name with 255 characters with subscript excluding the parent path"
                     ]
                 },
-                "UpdateExpression": "SET #color[2] = :color2, #newParent = :newParent, #pictures.#otherSideView = :picturesOtherSideView, #productReview.#oneStar[1] = :productReviewOneStar1, #productReview.#thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL1 = :productReviewThisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesA2, #relatedItems[3] = :relatedItems3, #root0 = :root0, #thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL3 = :thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL4, #1AtBeginning = :1AtBeginning, #nameWithSpace = :nameWithSpace, #prefixSuffix = :prefixSuffix"
+                "UpdateExpression": "SET #1AtBeginning = :1AtBeginning, #color[2] = :color2, #nameWithSpace = :nameWithSpace, #newParent = :newParent, #pictures.#otherSideView = :picturesOtherSideView, #prefixSuffix = :prefixSuffix, #productReview.#oneStar[1] = :productReviewOneStar1, #productReview.#thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL1 = :productReviewThisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesA2, #relatedItems[3] = :relatedItems3, #root0 = :root0, #thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL3 = :thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL4"
             });
         });
 
@@ -587,7 +587,7 @@ describe('dynamodb-update-expression', () => {
                         "Value for attribute name with 255 characters with subscript excluding the parent path"
                     ]
                 },
-                "UpdateExpression": "SET #color[2] = :color2, #newParent = :newParent, #pictures.#otherSideView = :picturesOtherSideView, #productReview.#oneStar[1] = :productReviewOneStar1, #productReview.#thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL1 = :productReviewThisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesA2, #relatedItems[3] = :relatedItems3, #root0 = :root0, #thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL3 = :thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL4, #1AtBeginning = :1AtBeginning, #nameWithSpace = :nameWithSpace, #prefixSuffix = :prefixSuffix, #safetyWarning = :safetyWarning REMOVE #color[0], #pictures.#rearView, #productReview.#fiveStar[0], #productReview.#fiveStar[1], #productReview.#oneStar[0], #relatedItems[1], #title"
+                "UpdateExpression": "SET #1AtBeginning = :1AtBeginning, #color[2] = :color2, #nameWithSpace = :nameWithSpace, #newParent = :newParent, #pictures.#otherSideView = :picturesOtherSideView, #prefixSuffix = :prefixSuffix, #productReview.#oneStar[1] = :productReviewOneStar1, #productReview.#thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL1 = :productReviewThisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesA2, #relatedItems[3] = :relatedItems3, #root0 = :root0, #thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL3 = :thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL4, #safetyWarning = :safetyWarning REMOVE #color[0], #pictures.#rearView, #productReview.#fiveStar[0], #productReview.#fiveStar[1], #productReview.#oneStar[0], #relatedItems[1], #title"
             });
         });
     });

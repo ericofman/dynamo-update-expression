@@ -50,7 +50,7 @@ function version({currentVersion, newVersion, useCurrent = true, versionPath = '
     const {prefix = 'expected', truncatedAliasCounter = 1} = aliasContext;
 
     const expectedVersionNode = alias(
-        {path: versionPath, value: expectedVersion},
+        {path: versionPath.split('.'), value: expectedVersion},
         conditionExpression.ExpressionAttributeNames,
         (expectedVersion !== undefined) ? conditionExpression.ExpressionAttributeValues : undefined, // else: no need for ExpressionAttributeValues
         {
@@ -99,6 +99,7 @@ function getVersionedUpdateExpression({original = {}, modified = {}, versionPath
 const regex = {
     numericSubscript$: /(.*)(\[[\d]+\])$/,
     isNumericSubscript$: /(.*)(\[[\d]+\])$/,
+    isNumeric: /^[\d]+$/,
     invalidIdentifierName: /\["([\w\.\s-]+)"\]/g, // extract path parts that are surrounded by ["<invalid.name>"] by jsonpath.stringify
     isInvalidIdentifierName: /\["([\w\.\s-]+)"\]/,
     safeDot: /\.(?![\w]+")|\[\"(.*)\"\]/ // will split a kebab case child $.x["prefix-suffix"]
@@ -174,10 +175,10 @@ function truncate(name, maxLen = maxAttrNameLen - 1, aliasContext = {truncatedAl
 
 function alias(node, nameMap, valueMap, aliasContext = {}) {
     const {prefix = ''} = aliasContext;
-    const parts = node.path
-        .slice(1) // skip `$` part of the path
-        .split(regex.safeDot) // first element is '', except for subscripted paths: $["prefix.suffix"] or $[0]
-        .filter(part => part !== undefined);
+    const [dollarSign, ...parts] = node.path;
+        // .slice(1) // skip `$` part of the path
+        // .split(regex.safeDot) // first element is '', except for subscripted paths: $["prefix.suffix"] or $[0]
+        // .filter(part => part !== undefined);
 
     const pathParts = parts
         .filter(part => part !== '')
@@ -191,20 +192,22 @@ function alias(node, nameMap, valueMap, aliasContext = {}) {
                 checkLimit(attrName);
                 attrNameAlias = `#${truncate(_.camelCase([prefix, attrName]), maxAttrNameLen - 1, aliasContext)}`; // #xY
                 pathPart = attrNameAlias; // #xY
-            } else if (regex.isNumericSubscript$.test(part)) {
-                const [whole, _attrName, subscript] = regex.isNumericSubscript$.exec(part); // relatedItems[1]
-                attrName = _attrName; //relatedItems
-                checkLimit(attrName);
-                attrNameAlias = `#${truncate(_.camelCase([prefix, attrName]), maxAttrNameLen - 1, aliasContext)}`;
-                pathPart = `${attrNameAlias}${subscript}`; // #relatedItems[1]
+                nameMap[attrNameAlias] = attrName;
+            } else if (!isNaN(part)) {
+                // const [whole, _attrName, subscript] = regex.isNumericSubscript$.exec(part); // relatedItems[1]
+                // attrName = _attrName; //relatedItems
+                // checkLimit(attrName);
+                // attrNameAlias = `#${truncate(_.camelCase([prefix, attrName]), maxAttrNameLen - 1, aliasContext)}`;
+                // pathPart = `${attrNameAlias}${subscript}`; // #relatedItems[1]
+                pathPart = `[${part}]`;
             } else {
                 attrName = part;
                 checkLimit(attrName);
                 attrNameAlias = `#${truncate(_.camelCase([prefix, attrName]), maxAttrNameLen - 1, aliasContext)}`;
                 pathPart = attrNameAlias;
+                nameMap[attrNameAlias] = attrName;
             }
 
-            nameMap[attrNameAlias] = attrName;
             return pathPart;
         });
 
@@ -215,7 +218,7 @@ function alias(node, nameMap, valueMap, aliasContext = {}) {
         value = valueAlias;
     }
     return {
-        path: pathParts.join('.'),
+        path: pathParts.join('.').replace('.[', '['),
         value
     };
 }
@@ -266,32 +269,38 @@ function partitionedDiff(original, modified, orphans = false, supportSets = fals
 
 function diff(original, modified, orphans = false) {
     const originalNodes = allNodes(original);
+    // console.log('originalNodes', originalNodes);
     const modifiedNodes = allNodes(modified);
+    // console.log('modifiedNodes', modifiedNodes);
 
     const originalLeafNodes = leafNodes(originalNodes);
+    // 22
+    console.log('originalLeafNodes', originalLeafNodes);
     const modifiedLeafNodes = leafNodes(modifiedNodes);
+    // 37
+    console.log('modifiedLeafNodes', modifiedLeafNodes);
 
     const nullified = (a, b) => !_.isNil(a.value) && _.isNil(b.value);
     const emptied = (a, b) => a.value !== '' && b.value === '';
 
     let addedNodes;
     if (orphans) {
-        addedNodes = _.differenceBy(modifiedLeafNodes, originalLeafNodes, 'path');
+        addedNodes = _.differenceBy(modifiedLeafNodes, originalLeafNodes, 'stringPath');
     } else {
-        addedNodes = _.differenceBy(modifiedNodes, originalNodes, 'path');
+        addedNodes = _.differenceBy(modifiedNodes, originalNodes, 'stringPath');
         addedNodes = ancestorNodes(addedNodes, true);
     }
 
     const removedLeafNodes = _.differenceWith(
         originalLeafNodes,
         modifiedNodes,
-        (a, b) => a.path === b.path && !nullified(a, b) && !emptied(a, b)
+        (a, b) => a.stringPath === b.stringPath && !nullified(a, b) && !emptied(a, b)
     );
 
     const updatedLeafNodes = _.intersectionWith(
         modifiedLeafNodes,
         originalLeafNodes,
-        (a, b) => a.path === b.path && a.value !== b.value && !nullified(b, a) && !emptied(b, a)
+        (a, b) => a.stringPath === b.stringPath && a.value !== b.value && !nullified(b, a) && !emptied(b, a)
     );
 
 
@@ -320,8 +329,8 @@ function isParentOf(parent, child) {
 function allNodes(data) {
     return jp
         .nodes(data, '$..*')
-        .map(({path, value}) => ({path: jp.stringify(path), value}))
-        .sort(sortBy('path'));
+        .map(({path, value}) => ({path: path, stringPath: jp.stringify(path), value}))
+        .sort(sortBy('stringPath'))
 }
 
 function leafNodes(nodes, sort = false) {
@@ -329,7 +338,7 @@ function leafNodes(nodes, sort = false) {
 
     return nodes
         .reduce((acc, node, index, arr) => {
-            if (index < arr.length - 1 && isParentOf(node.path, arr[index + 1].path)) return acc; // skip parent node
+            if (index < arr.length - 1 && isParentOf(node.stringPath, arr[index + 1].stringPath)) return acc; // skip parent node
             acc.push(node);
             return acc;
         }, []);
@@ -345,7 +354,7 @@ function ancestorNodes(nodes, sort = false) {
             return acc;
         }
         const [previous] = acc.slice(-1);
-        if (!isParentOf(previous.path, node.path)) {
+        if (!isParentOf(previous.stringPath, node.stringPath)) {
             acc.push(node);
         }
         return acc;
