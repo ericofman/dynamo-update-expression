@@ -63,8 +63,8 @@ function version({currentVersion, newVersion, useCurrent = true, versionPath = '
         conditionExpression.ConditionExpression = `${expectedVersionNode.path} ${condition} ${expectedVersionNode.value}`;
     } else {
         conditionExpression.ConditionExpression = `attribute_not_exists (${expectedVersionNode.path})`;
-        //Avoid "ValidationException: Value provided in ExpressionAttributeValues unused in expressions: keys: ${expectedVersionNode.path}"
-        delete conditionExpression.ExpressionAttributeValues[expectedVersionNode.value]; //value is aliasedValue
+        // Avoid "ValidationException: Value provided in ExpressionAttributeValues unused in expressions: keys: ${expectedVersionNode.path}"
+        delete conditionExpression.ExpressionAttributeValues[expectedVersionNode.value]; // value is aliasedValue
     }
 
     return conditionExpression;
@@ -121,7 +121,9 @@ function getUpdateExpression({original, modified, ignoreDeletes = false, orphans
     function removeExpression(removes) {
         const paths = removes
             .map(node => alias(node, updateExpression.ExpressionAttributeNames, undefined, aliasContext).path);
-        if (paths.length === 0) return;
+        if (paths.length === 0) {
+            return;
+        }
         return `REMOVE ${paths.join(', ')}`;
     }
 
@@ -129,7 +131,9 @@ function getUpdateExpression({original, modified, ignoreDeletes = false, orphans
         const pairs = addOrUpdates
             .map(node => alias(node, updateExpression.ExpressionAttributeNames, updateExpression.ExpressionAttributeValues, aliasContext))
             .map(node => `${node.path} = ${node.value}`);
-        if (pairs.length === 0) return;
+        if (pairs.length === 0) {
+            return;
+        }
         return `SET ${pairs.join(', ')}`;
     }
 
@@ -138,7 +142,9 @@ function getUpdateExpression({original, modified, ignoreDeletes = false, orphans
         const pairs = setDeletes
             .map(node => alias(node, updateExpression.ExpressionAttributeNames, updateExpression.ExpressionAttributeValues, aliasContext))
             .map(node => `${node.path} ${node.value}`);
-        if (pairs.length === 0) return;
+        if (pairs.length === 0) {
+            return;
+        }
         return `DELETE ${pairs.join(', ')}`;
     }
 
@@ -150,18 +156,22 @@ function getUpdateExpression({original, modified, ignoreDeletes = false, orphans
         setExp,
         removeExp,
         deleteExp
-    ].reduce((acc, value) => {
-        return value ? acc ? `${acc} ${value}` : `${value}` : acc;
-    }, '');
+    ].reduce((acc, value) => value ? acc ? `${acc} ${value}` : `${value}` : acc, '');
 
-    if (_.isEmpty(updateExpression.ExpressionAttributeValues)) delete updateExpression.ExpressionAttributeValues;
-    if (_.isEmpty(updateExpression.ExpressionAttributeNames)) delete updateExpression.ExpressionAttributeNames;
+    if (_.isEmpty(updateExpression.ExpressionAttributeValues)) {
+        delete updateExpression.ExpressionAttributeValues;
+    }
+    if (_.isEmpty(updateExpression.ExpressionAttributeNames)) {
+        delete updateExpression.ExpressionAttributeNames;
+    }
 
     return updateExpression;
 }
 
 function checkLimit(name, maxLen = maxAttrNameLen) {
-    if (name.length > maxLen) throw new Error(`Attribute name: [${name}] exceeds DynamoDB limit of [${maxLen}] `);
+    if (name.length > maxLen) {
+        throw new Error(`Attribute name: [${name}] exceeds DynamoDB limit of [${maxLen}] `);
+    }
 }
 
 function truncate(name, maxLen = maxAttrNameLen - 1, aliasContext = {truncatedAliasCounter: 1}) {
@@ -269,16 +279,10 @@ function partitionedDiff(original, modified, orphans = false, supportSets = fals
 
 function diff(original, modified, orphans = false) {
     const originalNodes = allNodes(original);
-    // console.log('originalNodes', originalNodes);
     const modifiedNodes = allNodes(modified);
-    // console.log('modifiedNodes', modifiedNodes);
 
     const originalLeafNodes = leafNodes(originalNodes);
-    // 22
-    console.log('originalLeafNodes', originalLeafNodes);
     const modifiedLeafNodes = leafNodes(modifiedNodes);
-    // 37
-    console.log('modifiedLeafNodes', modifiedLeafNodes);
 
     const nullified = (a, b) => !_.isNil(a.value) && _.isNil(b.value);
     const emptied = (a, b) => a.value !== '' && b.value === '';
@@ -291,11 +295,12 @@ function diff(original, modified, orphans = false) {
         addedNodes = ancestorNodes(addedNodes, true);
     }
 
-    const removedLeafNodes = _.differenceWith(
-        originalLeafNodes,
+    const removedLeafNodes = ancestorNodes(_.differenceWith(
+        originalNodes,
         modifiedNodes,
         (a, b) => a.stringPath === b.stringPath && !nullified(a, b) && !emptied(a, b)
-    );
+    ), true);
+
 
     const updatedLeafNodes = _.intersectionWith(
         modifiedLeafNodes,
@@ -314,7 +319,7 @@ function diff(original, modified, orphans = false) {
 }
 
 function sortBy(sortBy, mapping = v => v) {
-    return (a, b) => +(mapping(a[sortBy]) > mapping(b[sortBy])) || +(mapping(a[sortBy]) === mapping(b[sortBy])) - 1;
+    return (a, b) => Number(mapping(a[sortBy]) > mapping(b[sortBy])) || Number(mapping(a[sortBy]) === mapping(b[sortBy])) - 1;
 }
 
 function escape(str) {
@@ -329,16 +334,20 @@ function isParentOf(parent, child) {
 function allNodes(data) {
     return jp
         .nodes(data, '$..*')
-        .map(({path, value}) => ({path: path, stringPath: jp.stringify(path), value}))
-        .sort(sortBy('stringPath'))
+        .map(({path, value}) => ({path, stringPath: jp.stringify(path), value}))
+        .sort(sortBy('stringPath'));
 }
 
 function leafNodes(nodes, sort = false) {
-    if (sort) nodes.sort(sortBy('path'));
+    if (sort) {
+        nodes.sort(sortBy('path'));
+    }
 
     return nodes
         .reduce((acc, node, index, arr) => {
-            if (index < arr.length - 1 && isParentOf(node.stringPath, arr[index + 1].stringPath)) return acc; // skip parent node
+            if (index < arr.length - 1 && isParentOf(node.stringPath, arr[index + 1].stringPath)) {
+                return acc;
+            } // skip parent node
             acc.push(node);
             return acc;
         }, []);
@@ -346,7 +355,9 @@ function leafNodes(nodes, sort = false) {
 
 
 function ancestorNodes(nodes, sort = false) {
-    if (sort) nodes.sort(sortBy('path'));
+    if (sort) {
+        nodes.sort(sortBy('stringPath'));
+    }
 
     return nodes.reduce((acc, node, index) => {
         if (index === 0) {
