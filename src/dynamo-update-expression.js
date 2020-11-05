@@ -272,7 +272,7 @@ function alias(node, nameMap, valueMap, aliasContext = {}) {
     value = valueAlias
   }
   return {
-    path: pathParts.join('.').replace('.[', '['),
+    path: pathParts.join('.').replace(/\.\[/g, '['),
     value,
   }
 }
@@ -326,6 +326,7 @@ function diff(original, modified, orphans = false) {
   const modifiedLeafNodes = leafNodes(modifiedNodes)
 
   const nullified = (a, b) => !_.isNil(a.value) && _.isNil(b.value)
+  const emptyObjectOrArray = (value) => _.isObject(value) && _.isEmpty(value)
   const emptied = (a, b) => a.value !== '' && b.value === ''
 
   let addedNodes
@@ -344,13 +345,17 @@ function diff(original, modified, orphans = false) {
     ),
     true
   )
-
   const updatedLeafNodes = _.intersectionWith(
     modifiedLeafNodes,
     originalLeafNodes,
-    (a, b) => a.stringPath === b.stringPath && a.value !== b.value && !nullified(b, a) && !emptied(b, a)
+    (a, b) =>
+      a.stringPath === b.stringPath &&
+      a.value !== b.value &&
+      !emptyObjectOrArray(a.value) &&
+      !emptyObjectOrArray(b.value) &&
+      !nullified(b, a) &&
+      !emptied(b, a)
   )
-
   // @TODO: REMOVE should be paritioned into REMOVE for map-attributes and DELETE for set-elements.
   // Sets (aws-sdk specific immutable class instance!) are created using docClient.createSet() from arrays with first item being number, string or base64 encoded binary.
   return {

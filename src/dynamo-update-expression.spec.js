@@ -777,6 +777,249 @@ describe('dynamodb-update-expression', () => {
           'SET #color[2] = :color2, #newParent = :newParent, #pictures.#otherSideView = :picturesOtherSideView, #productReview.#oneStar[1] = :productReviewOneStar1, #productReview.#thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL1 = :productReviewThisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesA2, #relatedItems[3] = :relatedItems3, #root0 = :root0, #thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL3 = :thisIsAVeryLongAttributeNameAndHadToKeepTypingRandomWordsToTryToGetUpTo255CharactersYouWouldThinkThatThisIsEnoughOrThatItWillHappenOftenWhenYouHaveAnAttributeThatLongYouMightAlsoOpenAnIssueAboutItPleaseDoNotSinceTheLibraryDoesTrimYourNamesAndLimitAliasL4, #1AtBeginning = :1AtBeginning, #nameWithSpace = :nameWithSpace, #prefixSuffix = :prefixSuffix, #safetyWarning = :safetyWarning REMOVE #color[0], #pictures.#rearView, #productReview.#fiveStar[0], #productReview.#fiveStar[1], #productReview.#oneStar[0], #relatedItems[1], #title',
       })
     })
+
+    // TODO: Ideally this would work
+    // Workaround for now is to delete the quote object in the original value before comparing.
+    it.skip('creates update expression using SET & REMOVE for large object differences', () => {
+      let original = {
+        quote: { priced: false },
+      }
+
+      let modified = {
+        quote: {
+          'technology-professional-liability-coverage': 1000000,
+          'professional-liability-deductible-first-party': 1000,
+          'professional-liability-deductible-third-party': 2500,
+          'professional-liability-base-premium': 945,
+          'legal-contract-discount': 0,
+          'us-revenue-multiplier-pro-li': 472.5,
+          'rate-class-multiplier': 0,
+          'professional-liability-premium': 1417.5,
+          'cyber-coverage': 250000,
+          'cyber-deductible': 1000,
+          'cyber-premium': 0,
+          'network-security-and-privacy-breach-liability': 250000,
+          'network-security-and-privacy-breach-deductible': 2500,
+          'electronic-media-liability': 250000,
+          'electronic-media-deductible': 2500,
+          'privacy-breach-expense': 50000,
+          'privacy-breach-expense-deductible': 1000,
+          'information-asset-loss': 50000,
+          'information-asset-loss-deductible': 1000,
+          'business-interruption-loss': 50000,
+          'business-interruption-loss-deductible': '24 Hours',
+          'general-liability-coverage': 1000000,
+          'general-liability-deductible': 1000,
+          'general-liability-premium': 787.5,
+          'tenants-legal-liability': 500000,
+          'standard-non-owned-automobile-policy': 1000000,
+          'employee-benefits-liability-policy-coverage': 1000000,
+          'employers-liability': 1000000,
+          'sef-94-legal-liability-for-damage-to-hired-auto': 50000,
+          'contents-coverage': 50000,
+          'contents-deductible': 1000,
+          'contents-premium': 400,
+          crime: 5000,
+          'crime-deductible': 1000,
+          flood: 'Included',
+          'flood-deductible': 25000,
+          earthquake: 'Included',
+          'earthquake-deductible': '3% or minimum $25,000',
+          'sewer-backup': 'Included',
+          'sewer-backup-deductible': 2500,
+          'equipment-breakdown': 'Included',
+          'equipment-breakdown-deductible': 1000,
+          'miscellaneous-property-floater': 5000,
+          'miscellaneous-property-deductible': 1000,
+          'business-interruption-coverage': 50000,
+          'business-interruption-deductible': '24 Hours',
+          'business-interruption-premium': 100,
+          'intellectual-property-coverage': 0,
+          'intellectual-property-deductible': 0,
+          'intellectual-property-premium': 0,
+          'policy-expiry-date': 'December 23, 2020',
+          priced: true,
+          propertyPremiumSum: 500,
+          liabilityPremiumSum: 2205,
+          premiumsSubTotal: 2705,
+          premiumsTotalWtihTax: 2705,
+          'your-annual-insurance-policy-quote': 2705,
+          'taxes-&-fees': {
+            annual: 227.35,
+            monthly: 509.35,
+          },
+          total: {
+            annual: 2932.35,
+            monthly: 3214.44,
+            monthlyPayment: 267.87,
+          },
+          retroDate: 'December 23, 2019',
+          prov: 'bc',
+          premiumsSum: 2705,
+          insurerPremium: 2028.75,
+          brokerPremium: 405.75,
+          dmgaPremium: 270.5,
+          premiumsTaxRate: 0,
+          premiumsTaxes: 0,
+          brokerTransfer: 405.75,
+          premiumsTotal: 2705,
+          saasFee: 135.25,
+          saasFeeGST: 6.76,
+          saasTotal: 142.01,
+          preStripe: 2847.01,
+          stripeFees: 85.34,
+          monthlyStripeFees: 96.84,
+          customFee: 0,
+          customFeeTax: 0,
+          customFeeTotal: 0,
+          financingFees: 270.5,
+        },
+      }
+
+      const updateExpression = due.getUpdateExpression({ original, modified })
+      expect(updateExpression).toEqual({
+        ExpressionAttributeNames: {
+          '#quote': 'quote',
+        },
+        ExpressionAttributeValues: {
+          ':quote': modified.quote,
+        },
+        UpdateExpression: 'SET #quote = :quote',
+      })
+    })
+
+    it('does not create an update expression for empty objects or arrays', () => {
+      let original = {
+        quote: {},
+        ineligibleFields: [],
+      }
+
+      let modified = {
+        quote: {},
+        ineligibleFields: [],
+      }
+
+      const updateExpression = due.getUpdateExpression({ original, modified })
+      expect(updateExpression).toEqual({
+        UpdateExpression: '',
+      })
+    })
+
+    it('creates update expression correctly for deeply nested difference', () => {
+      let original = {
+        accountOwnerHistory: [
+          {
+            changes: [
+              {
+                field: 'marketplace',
+                newValue: {
+                  email: 'corey+noadmin@apollocover.com',
+                  id: '46111395-154b-4913-93f6-a3b0377f2a30',
+                  name: 'Corey Forrieter',
+                  phoneNumber: '+17783874484',
+                },
+                previousValue: { isMarketplace: false },
+              },
+            ],
+            comments: 'Temporary ownership change',
+            serverTimestamp: '2020-11-04T20:54:59Z',
+            userData: {
+              userId: '6b122432-8da3-4339-9bbb-1fda0352b586',
+              userName: 'Corey Forrieter',
+            },
+          },
+          {
+            changes: [
+              {
+                field: 'marketplace',
+                newValue: {
+                  email: 'corey+admin@apollocover.com',
+                  id: '7afe4b94-efd3-4c5a-97c6-beb94328e9b3',
+                  name: 'Corey Forrieter',
+                  phoneNumber: '+17783874484',
+                },
+                previousValue: {
+                  email: 'corey+noadmin@apollocover.com',
+                  id: '46111395-154b-4913-93f6-a3b0377f2a30',
+                  name: 'Corey Forrieter',
+                  phoneNumber: '+17783874484',
+                },
+              },
+            ],
+            comments: 'Temporary ownership change',
+            serverTimestamp: '2020-11-05T00:04:11Z',
+            userData: {
+              userId: '6b122432-8da3-4339-9bbb-1fda0352b586',
+              userName: 'Corey Forrieter',
+            },
+          },
+        ],
+      }
+
+      let modified = {
+        accountOwnerHistory: [
+          {
+            changes: [
+              {
+                field: 'marketplace',
+                newValue: {
+                  email: 'corey+noadmin@apollocover.com',
+                  id: '46111395-154b-4913-93f6-a3b0377f2a30',
+                  name: 'Corey Forrieter',
+                  phoneNumber: '+17783874484',
+                },
+                previousValue: { isMarketplace: true },
+              },
+            ],
+            comments: 'Temporary ownership change',
+            serverTimestamp: '2020-11-04T20:54:59Z',
+            userData: {
+              userId: '6b122432-8da3-4339-9bbb-1fda0352b586',
+              userName: 'Corey Forrieter',
+            },
+          },
+          {
+            changes: [
+              {
+                field: 'marketplace',
+                newValue: {
+                  email: 'corey+admin@apollocover.com',
+                  id: '7afe4b94-efd3-4c5a-97c6-beb94328e9b3',
+                  name: 'Corey Forrieter',
+                  phoneNumber: '+17783874484',
+                },
+                previousValue: {
+                  email: 'corey+noadmin@apollocover.com',
+                  id: '46111395-154b-4913-93f6-a3b0377f2a30',
+                  name: 'Corey Forrieter',
+                  phoneNumber: '+17783874484',
+                },
+              },
+            ],
+            comments: 'Temporary ownership change',
+            serverTimestamp: '2020-11-05T00:04:11Z',
+            userData: {
+              userId: '6b122432-8da3-4339-9bbb-1fda0352b586',
+              userName: 'Corey Forrieter',
+            },
+          },
+        ],
+      }
+      const updateExpression = due.getUpdateExpression({ original, modified })
+      expect(updateExpression).toEqual({
+        ExpressionAttributeNames: {
+          '#accountOwnerHistory': 'accountOwnerHistory',
+          '#changes': 'changes',
+          '#isMarketplace': 'isMarketplace',
+          '#previousValue': 'previousValue',
+        },
+        ExpressionAttributeValues: {
+          ':accountOwnerHistory0Changes0PreviousValueIsMarketplace': true,
+        },
+        UpdateExpression:
+          'SET #accountOwnerHistory[0].#changes[0].#previousValue.#isMarketplace = :accountOwnerHistory0Changes0PreviousValueIsMarketplace',
+      })
+    })
   })
 
   describe('getVersionedUpdateExpression backward compatible versionning', () => {

@@ -1,14 +1,14 @@
 {
   "name": "dynamo-update-expression",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Generate DynamoDB Update Expression by diff-ing original and updated documents",
   "main": "src/index.js",
   "scripts": {
     "commit": "git-cz",
-    "test": "npm run eslint && jest --verbose",
+    "test": "jest --verbose",
     "prebuild": "rimraf lib",
     "build": "babel --copy-files --out-dir lib --ignore *.spec.js src",
-    "eslint": "./node_modules/.bin/eslint src --quiet",
+    "eslint": "eslint src --max-warnings 0",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "dependencies": {
